@@ -1,0 +1,153 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { PieChart, Pie, Cell } from "recharts";
+import { UserCog } from "lucide-react";
+
+const counselorsData = [
+  { id: "1", name: "Dr. Emily Roberts", specialization: "Anxiety & Depression", availability: "available", activeSessions: 8, totalSessions: 145, rating: 4.8, yearsExp: 12 },
+  { id: "2", name: "Dr. Michael Lee", specialization: "Trauma & PTSD", availability: "busy", activeSessions: 12, totalSessions: 203, rating: 4.9, yearsExp: 15 },
+  { id: "3", name: "Dr. Sarah Martinez", specialization: "Family Therapy", availability: "available", activeSessions: 5, totalSessions: 167, rating: 4.7, yearsExp: 10 },
+  { id: "4", name: "Dr. James Taylor", specialization: "Stress Management", availability: "offline", activeSessions: 0, totalSessions: 189, rating: 4.6, yearsExp: 8 },
+  { id: "5", name: "Dr. Rachel Kim", specialization: "Adolescent Psychology", availability: "available", activeSessions: 6, totalSessions: 134, rating: 4.9, yearsExp: 11 },
+];
+
+const sessionsBySpecialization = [
+  { specialization: "Anxiety", sessions: 245, satisfaction: 88 },
+  { specialization: "Depression", sessions: 198, satisfaction: 85 },
+  { specialization: "Trauma", sessions: 156, satisfaction: 92 },
+  { specialization: "Stress", sessions: 189, satisfaction: 81 },
+  { specialization: "Family", sessions: 134, satisfaction: 87 },
+];
+
+const availabilityData = [
+  { name: "Available", value: 8, color: "hsl(var(--success))" },
+  { name: "Busy", value: 4, color: "hsl(var(--warning))" },
+  { name: "Offline", value: 3, color: "hsl(var(--muted))" },
+];
+
+const getAvailabilityBadge = (status: string) => {
+  if (status === "available") return <Badge className="bg-success">Available</Badge>;
+  if (status === "busy") return <Badge className="bg-warning">Busy</Badge>;
+  return <Badge variant="secondary">Offline</Badge>;
+};
+
+const Counselors = () => {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <UserCog className="h-8 w-8 text-primary" />
+        <div>
+          <h1 className="text-3xl font-bold">Counselor Management</h1>
+          <p className="text-muted-foreground">Professional therapist profiles and availability tracking</p>
+        </div>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Sessions by Specialization</CardTitle>
+            <CardDescription>Workload and satisfaction rates</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={sessionsBySpecialization}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="specialization" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "var(--radius)"
+                  }}
+                />
+                <Legend />
+                <Bar dataKey="sessions" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} name="Total Sessions" />
+                <Bar dataKey="satisfaction" fill="hsl(var(--success))" radius={[8, 8, 0, 0]} name="Satisfaction %" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Counselor Availability</CardTitle>
+            <CardDescription>Current status distribution</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={availabilityData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, value }) => `${name}: ${value}`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {availabilityData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Counselors Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>All Counselors</CardTitle>
+          <CardDescription>Complete therapist directory</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Counselor</TableHead>
+                <TableHead>Specialization</TableHead>
+                <TableHead>Experience</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Active Sessions</TableHead>
+                <TableHead>Total Sessions</TableHead>
+                <TableHead>Rating</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {counselorsData.map((counselor) => (
+                <TableRow key={counselor.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Avatar>
+                        <AvatarFallback className="bg-primary text-primary-foreground">
+                          {counselor.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium">{counselor.name}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{counselor.specialization}</TableCell>
+                  <TableCell>{counselor.yearsExp} years</TableCell>
+                  <TableCell>{getAvailabilityBadge(counselor.availability)}</TableCell>
+                  <TableCell className="text-center font-semibold">{counselor.activeSessions}</TableCell>
+                  <TableCell className="text-center">{counselor.totalSessions}</TableCell>
+                  <TableCell>⭐ {counselor.rating}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default Counselors;
