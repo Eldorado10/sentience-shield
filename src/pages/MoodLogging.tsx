@@ -1,9 +1,16 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { PieChart, Pie, Cell } from "recharts";
-import { Activity } from "lucide-react";
+import { Activity, Plus, Search, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 const dailyLogsData = [
   { id: "1", userName: "Emma Wilson", date: "2025-01-15", mood: 8, stress: 3, sleep: 7.5, notes: "Feeling great today" },
@@ -36,7 +43,77 @@ const getMoodBadge = (mood: number) => {
   return <Badge variant="destructive">Poor</Badge>;
 };
 
+type MoodLog = {
+  id: string;
+  userName: string;
+  date: string;
+  mood: number;
+  stress: number;
+  sleep: number;
+  notes: string;
+};
+
 const MoodLogging = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingLog, setEditingLog] = useState<MoodLog | null>(null);
+  const [formData, setFormData] = useState({
+    userName: "",
+    date: "",
+    mood: 5,
+    stress: 5,
+    sleep: 7,
+    notes: ""
+  });
+
+  const filteredLogs = dailyLogsData.filter(log => 
+    log.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    log.notes.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleAdd = () => {
+    setEditingLog(null);
+    setFormData({
+      userName: "",
+      date: new Date().toISOString().split('T')[0],
+      mood: 5,
+      stress: 5,
+      sleep: 7,
+      notes: ""
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleEdit = (log: MoodLog) => {
+    setEditingLog(log);
+    setFormData({
+      userName: log.userName,
+      date: log.date,
+      mood: log.mood,
+      stress: log.stress,
+      sleep: log.sleep,
+      notes: log.notes
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = (log: MoodLog) => {
+    if (confirm(`Delete mood log for ${log.userName}?`)) {
+      toast.success("Mood log deleted successfully");
+      // In real app: call API to delete
+    }
+  };
+
+  const handleSave = () => {
+    if (editingLog) {
+      toast.success("Mood log updated successfully");
+    } else {
+      toast.success("Mood log added successfully");
+    }
+    setIsDialogOpen(false);
+    // In real app: call API to save
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -108,8 +185,27 @@ const MoodLogging = () => {
       {/* Daily Logs Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Today's Mood Logs</CardTitle>
-          <CardDescription>Recent user submissions for January 15, 2025</CardDescription>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <CardTitle>Today's Mood Logs</CardTitle>
+              <CardDescription>Recent user submissions for January 15, 2025</CardDescription>
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-initial">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search logs..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 w-full sm:w-[200px]"
+                />
+              </div>
+              <Button onClick={handleAdd}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Log
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -121,29 +217,142 @@ const MoodLogging = () => {
                 <TableHead>Stress Level</TableHead>
                 <TableHead>Sleep Hours</TableHead>
                 <TableHead>Notes</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {dailyLogsData.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell className="font-medium">{log.userName}</TableCell>
-                  <TableCell>{log.date}</TableCell>
-                  <TableCell>{getMoodBadge(log.mood)}</TableCell>
-                  <TableCell>
-                    <span className={log.stress >= 7 ? "text-destructive font-semibold" : ""}>
-                      {log.stress}/10
-                    </span>
-                  </TableCell>
-                  <TableCell>{log.sleep}h</TableCell>
-                  <TableCell className="max-w-xs truncate text-muted-foreground italic">
-                    "{log.notes}"
+              {filteredLogs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                    No mood logs found
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredLogs.map((log) => (
+                  <TableRow key={log.id}>
+                    <TableCell className="font-medium">{log.userName}</TableCell>
+                    <TableCell>{log.date}</TableCell>
+                    <TableCell>{getMoodBadge(log.mood)}</TableCell>
+                    <TableCell>
+                      <span className={log.stress >= 7 ? "text-destructive font-semibold" : ""}>
+                        {log.stress}/10
+                      </span>
+                    </TableCell>
+                    <TableCell>{log.sleep}h</TableCell>
+                    <TableCell className="max-w-xs truncate text-muted-foreground italic">
+                      "{log.notes}"
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(log)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(log)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      {/* Add/Edit Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{editingLog ? "Edit Mood Log" : "Add Mood Log"}</DialogTitle>
+            <DialogDescription>
+              {editingLog ? "Update the mood log details below" : "Enter mood log details for the user"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="userName">User Name</Label>
+              <Input
+                id="userName"
+                value={formData.userName}
+                onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
+                placeholder="Enter user name"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="date">Date</Label>
+              <Input
+                id="date"
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="mood">Mood (1-10)</Label>
+                <Input
+                  id="mood"
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={formData.mood}
+                  onChange={(e) => setFormData({ ...formData, mood: Number(e.target.value) })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="stress">Stress (1-10)</Label>
+                <Input
+                  id="stress"
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={formData.stress}
+                  onChange={(e) => setFormData({ ...formData, stress: Number(e.target.value) })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="sleep">Sleep (hrs)</Label>
+                <Input
+                  id="sleep"
+                  type="number"
+                  min="0"
+                  max="24"
+                  step="0.5"
+                  value={formData.sleep}
+                  onChange={(e) => setFormData({ ...formData, sleep: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="How are you feeling today?"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>
+              {editingLog ? "Update" : "Add"} Log
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
