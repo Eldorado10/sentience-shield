@@ -14,16 +14,420 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ai_analysis: {
+        Row: {
+          analysis_date: string | null
+          created_at: string | null
+          detected_emotions: string[] | null
+          id: string
+          key_topics: string[] | null
+          log_id: string | null
+          recommendations: string | null
+          risk_level: string | null
+          sentiment_score: number | null
+          user_id: string
+        }
+        Insert: {
+          analysis_date?: string | null
+          created_at?: string | null
+          detected_emotions?: string[] | null
+          id?: string
+          key_topics?: string[] | null
+          log_id?: string | null
+          recommendations?: string | null
+          risk_level?: string | null
+          sentiment_score?: number | null
+          user_id: string
+        }
+        Update: {
+          analysis_date?: string | null
+          created_at?: string | null
+          detected_emotions?: string[] | null
+          id?: string
+          key_topics?: string[] | null
+          log_id?: string | null
+          recommendations?: string | null
+          risk_level?: string | null
+          sentiment_score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_analysis_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
+            referencedRelation: "daily_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      counsellors: {
+        Row: {
+          active_sessions: number | null
+          availability: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          rating: number | null
+          specialization: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          active_sessions?: number | null
+          availability?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          rating?: number | null
+          specialization: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          active_sessions?: number | null
+          availability?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          rating?: number | null
+          specialization?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      crisis_alerts: {
+        Row: {
+          alert_type: string
+          counsellor_contacted: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          resolved_at: string | null
+          severity: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          alert_type: string
+          counsellor_contacted?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          resolved_at?: string | null
+          severity: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          alert_type?: string
+          counsellor_contacted?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          resolved_at?: string | null
+          severity?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crisis_alerts_counsellor_contacted_fkey"
+            columns: ["counsellor_contacted"]
+            isOneToOne: false
+            referencedRelation: "counsellors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          log_date: string
+          mood: string
+          notes: string | null
+          sleep_hours: number | null
+          stress_level: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          log_date?: string
+          mood: string
+          notes?: string | null
+          sleep_hours?: number | null
+          stress_level: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          log_date?: string
+          mood?: string
+          notes?: string | null
+          sleep_hours?: number | null
+          stress_level?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      emergency_contacts: {
+        Row: {
+          country: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          phone: string
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          phone: string
+        }
+        Update: {
+          country?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          phone?: string
+        }
+        Relationships: []
+      }
+      feedback: {
+        Row: {
+          comments: string | null
+          counsellor_id: string | null
+          created_at: string | null
+          id: string
+          rating: number | null
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          comments?: string | null
+          counsellor_id?: string | null
+          created_at?: string | null
+          id?: string
+          rating?: number | null
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          comments?: string | null
+          counsellor_id?: string | null
+          created_at?: string | null
+          id?: string
+          rating?: number | null
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_counsellor_id_fkey"
+            columns: ["counsellor_id"]
+            isOneToOne: false
+            referencedRelation: "counsellors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      progress: {
+        Row: {
+          assessment_date: string
+          created_at: string | null
+          emotional_stability_score: number | null
+          id: string
+          improvement_notes: string | null
+          user_id: string
+        }
+        Insert: {
+          assessment_date?: string
+          created_at?: string | null
+          emotional_stability_score?: number | null
+          id?: string
+          improvement_notes?: string | null
+          user_id: string
+        }
+        Update: {
+          assessment_date?: string
+          created_at?: string | null
+          emotional_stability_score?: number | null
+          id?: string
+          improvement_notes?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      recommendations: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string
+          id: string
+          is_active: boolean | null
+          priority: string | null
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description: string
+          id?: string
+          is_active?: boolean | null
+          priority?: string | null
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          is_active?: boolean | null
+          priority?: string | null
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      sessions: {
+        Row: {
+          counsellor_id: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          session_date: string
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          counsellor_id?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          session_date: string
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          counsellor_id?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          session_date?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_counsellor_id_fkey"
+            columns: ["counsellor_id"]
+            isOneToOne: false
+            referencedRelation: "counsellors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "counsellor" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +554,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "counsellor", "user"],
+    },
   },
 } as const
