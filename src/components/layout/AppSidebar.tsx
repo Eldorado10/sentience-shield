@@ -24,7 +24,7 @@ import {
   SidebarHeader,
 } from "@/components/ui/sidebar";
 
-const menuItems = [
+const adminMenuItems = [
   {
     title: "Overview",
     url: "/",
@@ -41,11 +41,6 @@ const menuItems = [
     icon: Brain,
   },
   {
-    title: "Recommendations",
-    url: "/recommendations",
-    icon: Lightbulb,
-  },
-  {
     title: "Counselor Management",
     url: "/counselors",
     icon: UserCog,
@@ -59,6 +54,14 @@ const menuItems = [
     title: "Crisis Detection",
     url: "/crisis",
     icon: AlertTriangle,
+  },
+];
+
+const dataScientistMenuItems = [
+  {
+    title: "Recommendations",
+    url: "/recommendations",
+    icon: Lightbulb,
   },
 ];
 
@@ -79,10 +82,36 @@ export function AppSidebar() {
       
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {adminMenuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      end
+                      className={({ isActive }) =>
+                        isActive
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                          : "hover:bg-sidebar-accent/50"
+                      }
+                    >
+                      <item.icon className="h-4 w-4 mr-3" />
+                      <span>{item.title}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Data Scientist</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {dataScientistMenuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink
