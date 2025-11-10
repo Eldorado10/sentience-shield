@@ -1,10 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { PieChart, Pie, Cell } from "recharts";
-import { UserCog } from "lucide-react";
+import { UserCog, Plus, Search, Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "@/hooks/use-toast";
 
 const counselorsData = [
   { id: "1", name: "Dr. Emily Roberts", specialization: "Anxiety & Depression", availability: "available", activeSessions: 8, totalSessions: 145, rating: 4.8, yearsExp: 12 },
@@ -35,6 +41,41 @@ const getAvailabilityBadge = (status: string) => {
 };
 
 const Counselors = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingCounselor, setEditingCounselor] = useState<any>(null);
+  const [formData, setFormData] = useState({ name: "", specialization: "", yearsExp: "", availability: "" });
+
+  const filteredData = counselorsData.filter(item =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.specialization.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleAdd = () => {
+    setEditingCounselor(null);
+    setFormData({ name: "", specialization: "", yearsExp: "", availability: "" });
+    setIsDialogOpen(true);
+  };
+
+  const handleEdit = (counselor: any) => {
+    setEditingCounselor(counselor);
+    setFormData({ name: counselor.name, specialization: counselor.specialization, yearsExp: counselor.yearsExp.toString(), availability: counselor.availability });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    toast({ title: "Counselor removed", description: "The counselor has been removed from the system." });
+  };
+
+  const handleSave = () => {
+    if (editingCounselor) {
+      toast({ title: "Counselor updated", description: "The counselor profile has been updated successfully." });
+    } else {
+      toast({ title: "Counselor added", description: "New counselor has been added successfully." });
+    }
+    setIsDialogOpen(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -105,8 +146,27 @@ const Counselors = () => {
       {/* Counselors Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Counselors</CardTitle>
-          <CardDescription>Complete therapist directory</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>All Counselors</CardTitle>
+              <CardDescription>Complete therapist directory</CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search counselors..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 w-[200px]"
+                />
+              </div>
+              <Button onClick={handleAdd}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Counselor
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -119,10 +179,11 @@ const Counselors = () => {
                 <TableHead>Active Sessions</TableHead>
                 <TableHead>Total Sessions</TableHead>
                 <TableHead>Rating</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {counselorsData.map((counselor) => (
+              {filteredData.map((counselor) => (
                 <TableRow key={counselor.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
@@ -140,12 +201,73 @@ const Counselors = () => {
                   <TableCell className="text-center font-semibold">{counselor.activeSessions}</TableCell>
                   <TableCell className="text-center">{counselor.totalSessions}</TableCell>
                   <TableCell>⭐ {counselor.rating}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(counselor)}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleDelete(counselor.id)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingCounselor ? "Edit Counselor" : "Add Counselor"}</DialogTitle>
+            <DialogDescription>
+              {editingCounselor ? "Update the counselor profile" : "Add a new counselor to the system"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="specialization">Specialization</Label>
+              <Input
+                id="specialization"
+                value={formData.specialization}
+                onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="yearsExp">Years of Experience</Label>
+              <Input
+                id="yearsExp"
+                type="number"
+                value={formData.yearsExp}
+                onChange={(e) => setFormData({ ...formData, yearsExp: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="availability">Availability</Label>
+              <Input
+                id="availability"
+                value={formData.availability}
+                onChange={(e) => setFormData({ ...formData, availability: e.target.value })}
+                placeholder="available, busy, or offline"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSave}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

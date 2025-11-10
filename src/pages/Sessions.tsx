@@ -1,9 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { AreaChart, Area } from "recharts";
-import { Calendar } from "lucide-react";
+import { Calendar, Plus, Search, Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "@/hooks/use-toast";
 
 const sessionsData = [
   { id: "1", userName: "Emma Wilson", counselor: "Dr. Emily Roberts", date: "2025-01-20", time: "10:00 AM", status: "Scheduled", progress: 8 },
@@ -40,6 +46,41 @@ const getStatusBadge = (status: string) => {
 };
 
 const Sessions = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingSession, setEditingSession] = useState<any>(null);
+  const [formData, setFormData] = useState({ userName: "", counselor: "", date: "", time: "", status: "" });
+
+  const filteredData = sessionsData.filter(item =>
+    item.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.counselor.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleAdd = () => {
+    setEditingSession(null);
+    setFormData({ userName: "", counselor: "", date: "", time: "", status: "" });
+    setIsDialogOpen(true);
+  };
+
+  const handleEdit = (session: any) => {
+    setEditingSession(session);
+    setFormData({ userName: session.userName, counselor: session.counselor, date: session.date, time: session.time, status: session.status });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    toast({ title: "Session deleted", description: "The session has been removed." });
+  };
+
+  const handleSave = () => {
+    if (editingSession) {
+      toast({ title: "Session updated", description: "The session has been updated successfully." });
+    } else {
+      toast({ title: "Session scheduled", description: "New session has been scheduled successfully." });
+    }
+    setIsDialogOpen(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -114,8 +155,27 @@ const Sessions = () => {
       {/* Sessions Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Upcoming & Recent Sessions</CardTitle>
-          <CardDescription>Scheduled and completed therapy appointments</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Upcoming & Recent Sessions</CardTitle>
+              <CardDescription>Scheduled and completed therapy appointments</CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search sessions..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 w-[200px]"
+                />
+              </div>
+              <Button onClick={handleAdd}>
+                <Plus className="h-4 w-4 mr-2" />
+                Schedule Session
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -127,10 +187,11 @@ const Sessions = () => {
                 <TableHead>Time</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Progress Score</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sessionsData.map((session) => (
+              {filteredData.map((session) => (
                 <TableRow key={session.id}>
                   <TableCell className="font-medium">{session.userName}</TableCell>
                   <TableCell>{session.counselor}</TableCell>
@@ -148,12 +209,82 @@ const Sessions = () => {
                       </div>
                     </div>
                   </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(session)}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleDelete(session.id)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingSession ? "Edit Session" : "Schedule Session"}</DialogTitle>
+            <DialogDescription>
+              {editingSession ? "Update the session details" : "Schedule a new counseling session"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="userName">User Name</Label>
+              <Input
+                id="userName"
+                value={formData.userName}
+                onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="counselor">Counselor</Label>
+              <Input
+                id="counselor"
+                value={formData.counselor}
+                onChange={(e) => setFormData({ ...formData, counselor: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="date">Date</Label>
+              <Input
+                id="date"
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="time">Time</Label>
+              <Input
+                id="time"
+                type="time"
+                value={formData.time}
+                onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="status">Status</Label>
+              <Input
+                id="status"
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                placeholder="Scheduled, Completed, or Cancelled"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSave}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

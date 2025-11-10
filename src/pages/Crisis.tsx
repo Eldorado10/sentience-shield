@@ -2,9 +2,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Phone, MessageSquare, Heart } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { AlertTriangle, Phone, MessageSquare, Heart, Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { BarChart, Bar } from "recharts";
+import { useState } from "react";
+import { toast } from "@/hooks/use-toast";
 
 const crisisAlertsData = [
   { id: "1", userName: "Sarah Johnson", riskLevel: "critical", timestamp: "2025-01-15 10:45:00", lastNote: "Feeling hopeless and overwhelmed, can't see a way out", actionTaken: "Counselor Contacted", counselor: "Dr. Emily Roberts" },
@@ -37,6 +43,41 @@ const getRiskBadge = (level: string) => {
 };
 
 const Crisis = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingAlert, setEditingAlert] = useState<any>(null);
+  const [formData, setFormData] = useState({ userName: "", riskLevel: "", lastNote: "", counselor: "" });
+
+  const filteredData = crisisAlertsData.filter(item =>
+    item.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.counselor.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleAdd = () => {
+    setEditingAlert(null);
+    setFormData({ userName: "", riskLevel: "", lastNote: "", counselor: "" });
+    setIsDialogOpen(true);
+  };
+
+  const handleEdit = (alert: any) => {
+    setEditingAlert(alert);
+    setFormData({ userName: alert.userName, riskLevel: alert.riskLevel, lastNote: alert.lastNote, counselor: alert.counselor });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    toast({ title: "Alert resolved", description: "The crisis alert has been marked as resolved." });
+  };
+
+  const handleSave = () => {
+    if (editingAlert) {
+      toast({ title: "Alert updated", description: "The crisis alert has been updated successfully." });
+    } else {
+      toast({ title: "Alert created", description: "New crisis alert has been created successfully." });
+    }
+    setIsDialogOpen(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -128,8 +169,27 @@ const Crisis = () => {
       {/* Crisis Alerts Table */}
       <Card className="border-destructive">
         <CardHeader>
-          <CardTitle className="text-destructive">Active & Recent Crisis Alerts</CardTitle>
-          <CardDescription>High-risk users requiring immediate attention</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-destructive">Active & Recent Crisis Alerts</CardTitle>
+              <CardDescription>High-risk users requiring immediate attention</CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search alerts..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 w-[200px]"
+                />
+              </div>
+              <Button onClick={handleAdd} variant="destructive">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Alert
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -141,10 +201,11 @@ const Crisis = () => {
                 <TableHead>Last Note</TableHead>
                 <TableHead>Assigned Counselor</TableHead>
                 <TableHead>Action</TableHead>
+                <TableHead>Manage</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {crisisAlertsData.map((alert) => (
+              {filteredData.map((alert) => (
                 <TableRow key={alert.id} className="bg-destructive-light">
                   <TableCell className="font-medium">{alert.userName}</TableCell>
                   <TableCell>{getRiskBadge(alert.riskLevel)}</TableCell>
@@ -165,12 +226,72 @@ const Crisis = () => {
                       </Button>
                     </div>
                   </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(alert)}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleDelete(alert.id)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingAlert ? "Edit Crisis Alert" : "Create Crisis Alert"}</DialogTitle>
+            <DialogDescription>
+              {editingAlert ? "Update the crisis alert details" : "Create a new crisis alert"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="userName">User Name</Label>
+              <Input
+                id="userName"
+                value={formData.userName}
+                onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="riskLevel">Risk Level</Label>
+              <Input
+                id="riskLevel"
+                value={formData.riskLevel}
+                onChange={(e) => setFormData({ ...formData, riskLevel: e.target.value })}
+                placeholder="critical or high"
+              />
+            </div>
+            <div>
+              <Label htmlFor="lastNote">Last Note</Label>
+              <Textarea
+                id="lastNote"
+                value={formData.lastNote}
+                onChange={(e) => setFormData({ ...formData, lastNote: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="counselor">Assigned Counselor</Label>
+              <Input
+                id="counselor"
+                value={formData.counselor}
+                onChange={(e) => setFormData({ ...formData, counselor: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSave} variant="destructive">Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
