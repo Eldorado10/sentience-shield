@@ -5,14 +5,75 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain } from "lucide-react";
+import { Brain, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [creatingDemo, setCreatingDemo] = useState(false);
   const navigate = useNavigate();
+
+  const createDemoUsers = async () => {
+    setCreatingDemo(true);
+    try {
+      // Create admin user
+      const { data: adminData, error: adminError } = await supabase.auth.signUp({
+        email: "admin@mindcare.com",
+        password: "admin123",
+        options: {
+          data: {
+            full_name: "Admin User"
+          }
+        }
+      });
+
+      if (adminError && !adminError.message.includes("already registered")) {
+        throw adminError;
+      }
+
+      // Create data scientist user
+      const { data: scientistData, error: scientistError } = await supabase.auth.signUp({
+        email: "scientist@mindcare.com",
+        password: "scientist123",
+        options: {
+          data: {
+            full_name: "Data Scientist"
+          }
+        }
+      });
+
+      if (scientistError && !scientistError.message.includes("already registered")) {
+        throw scientistError;
+      }
+
+      // Assign roles using admin privileges
+      if (adminData?.user) {
+        await supabase.from("user_roles").upsert({
+          user_id: adminData.user.id,
+          role: "admin"
+        }, { onConflict: "user_id,role" });
+      }
+
+      if (scientistData?.user) {
+        await supabase.from("user_roles").upsert({
+          user_id: scientistData.user.id,
+          role: "data_scientist"
+        }, { onConflict: "user_id,role" });
+      }
+
+      toast.success("Demo users created successfully! You can now login.");
+    } catch (error: any) {
+      if (error.message.includes("already registered")) {
+        toast.info("Demo users already exist. You can login now.");
+      } else {
+        toast.error(error.message || "Failed to create demo users");
+      }
+    } finally {
+      setCreatingDemo(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,12 +154,24 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="mt-6 p-4 bg-muted rounded-lg space-y-2">
-            <p className="text-sm font-medium">Demo Credentials:</p>
-            <div className="text-xs space-y-1">
-              <p><strong>Admin:</strong> admin@mindcare.com / admin123</p>
-              <p><strong>Data Scientist:</strong> scientist@mindcare.com / scientist123</p>
+          <div className="mt-6 p-4 bg-muted rounded-lg space-y-3">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Demo Credentials:</p>
+              <div className="text-xs space-y-1">
+                <p><strong>Admin:</strong> admin@mindcare.com / admin123</p>
+                <p><strong>Data Scientist:</strong> scientist@mindcare.com / scientist123</p>
+              </div>
             </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full"
+              onClick={createDemoUsers}
+              disabled={creatingDemo}
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
+              {creatingDemo ? "Creating..." : "Create Demo Users"}
+            </Button>
           </div>
         </CardContent>
       </Card>
