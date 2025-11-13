@@ -23,6 +23,7 @@ export default function Login() {
         email: "admin@mindcare.com",
         password: "admin123",
         options: {
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             full_name: "Admin User"
           }
@@ -38,6 +39,7 @@ export default function Login() {
         email: "scientist@mindcare.com",
         password: "scientist123",
         options: {
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             full_name: "Data Scientist"
           }
