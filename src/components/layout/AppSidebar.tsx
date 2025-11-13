@@ -11,7 +11,6 @@ import {
   LayoutDashboard,
   Lightbulb,
   UserCog,
-  LogOut,
 } from "lucide-react";
 import {
   Sidebar,
@@ -23,10 +22,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
-  SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
 
 const adminMenuItems = [
   {
@@ -70,8 +66,6 @@ const dataScientistMenuItems = [
 ];
 
 export function AppSidebar() {
-  const { role, signOut } = useAuth();
-
   return (
     <Sidebar className="border-r border-border">
       <SidebarHeader className="border-b border-border p-4">
@@ -81,81 +75,64 @@ export function AppSidebar() {
           </div>
           <div>
             <h2 className="font-bold text-lg">MindCare</h2>
-            <p className="text-xs text-muted-foreground">
-              {role === "admin" ? "Admin Panel" : "Data Scientist"}
-            </p>
+            <p className="text-xs text-muted-foreground">Admin Panel</p>
           </div>
         </div>
       </SidebarHeader>
       
       <SidebarContent>
-        {role === "admin" && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {adminMenuItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to={item.url}
-                        end
-                        className={({ isActive }) =>
-                          isActive
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                            : "hover:bg-sidebar-accent/50"
-                        }
-                      >
-                        <item.icon className="h-4 w-4 mr-3" />
-                        <span>{item.title}</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+        <SidebarGroup>
+          <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {adminMenuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      end
+                      className={({ isActive }) =>
+                        isActive
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                          : "hover:bg-sidebar-accent/50"
+                      }
+                    >
+                      <item.icon className="h-4 w-4 mr-3" />
+                      <span>{item.title}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-        {role === "data_scientist" && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Data Scientist</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {dataScientistMenuItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to={item.url}
-                        end
-                        className={({ isActive }) =>
-                          isActive
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                            : "hover:bg-sidebar-accent/50"
-                        }
-                      >
-                        <item.icon className="h-4 w-4 mr-3" />
-                        <span>{item.title}</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+        <SidebarGroup>
+          <SidebarGroupLabel>Data Scientist</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {dataScientistMenuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      end
+                      className={({ isActive }) =>
+                        isActive
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                          : "hover:bg-sidebar-accent/50"
+                      }
+                    >
+                      <item.icon className="h-4 w-4 mr-3" />
+                      <span>{item.title}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
-
-      <SidebarFooter className="border-t border-border p-4">
-        <Button 
-          variant="outline" 
-          className="w-full justify-start" 
-          onClick={signOut}
-        >
-          <LogOut className="h-4 w-4 mr-3" />
-          Sign Out
-        </Button>
-      </SidebarFooter>
     </Sidebar>
   );
 }
