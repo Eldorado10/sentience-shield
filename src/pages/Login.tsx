@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Brain } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -15,9 +21,24 @@ export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  useEffect(() => {
+    document.title = "Login | MindCare";
+  }, []);
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    const parsed = loginSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      const firstError = parsed.error.errors[0]?.message ?? "Invalid input";
+      toast({
+        title: "Invalid input",
+        description: firstError,
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -30,31 +51,85 @@ export default function Login() {
         description: error.message,
         variant: "destructive",
       });
-    } else {
-      navigate("/");
+      setIsLoading(false);
+      return;
     }
 
+    navigate("/");
     setIsLoading(false);
   };
 
   const handleDemoLogin = async (demoEmail: string, demoPassword: string) => {
     setIsLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    // Try to sign in first
+    let { error } = await supabase.auth.signInWithPassword({
       email: demoEmail,
       password: demoPassword,
     });
 
     if (error) {
-      toast({
-        title: "Login Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      navigate("/");
+      if (error.message?.toLowerCase().includes("invalid login credentials")) {
+        // If user doesn't exist yet, create it and then sign in
+        const redirectUrl = `${window.location.origin}/`;
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: demoEmail,
+          password: demoPassword,
+          options: { emailRedirectTo: redirectUrl },
+        });
+
+        // If already registered, continue to login retry; otherwise handle real errors
+        if (signUpError && !signUpError.message.toLowerCase().includes("already registered")) {
+          toast({
+            title: "Demo Setup Failed",
+            description: signUpError.message,
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        const retry = await supabase.auth.signInWithPassword({
+          email: demoEmail,
+          password: demoPassword,
+        });
+
+        if (retry.error) {
+          toast({
+            title: "Login Failed",
+            description: retry.error.message,
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+      } else {
+        toast({
+          title: "Login Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
     }
 
+    // Optional: attempt to ensure role for demo users (ignore failures silently)
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const user = userRes?.user;
+      if (user) {
+        const role = demoEmail.includes("admin") ? "admin" : "data_scientist";
+        // Attempt insert; ignore if table doesn't exist or role already set
+        await supabase
+          .from("user_roles")
+          .insert({ user_id: user.id, role })
+          .select()
+          .single();
+      }
+    } catch (_) {}
+
+    navigate("/");
     setIsLoading(false);
   };
 
