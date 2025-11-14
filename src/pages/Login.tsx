@@ -78,8 +78,10 @@ export default function Login() {
           options: { emailRedirectTo: redirectUrl },
         });
 
-        // If already registered, continue to login retry; otherwise handle real errors
-        if (signUpError && !signUpError.message.toLowerCase().includes("already registered")) {
+        // If already registered or duplicate key error, continue to login retry; otherwise handle real errors
+        if (signUpError && 
+            !signUpError.message.toLowerCase().includes("already registered") &&
+            !signUpError.message.toLowerCase().includes("duplicate key")) {
           toast({
             title: "Demo Setup Failed",
             description: signUpError.message,
