@@ -1,17 +1,13 @@
 import { ReactNode } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { Brain, Heart, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
+import { Brain, Heart } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { signOut } = useAuth();
-
   return (
     <SidebarProvider>
       <div className="min-h-screen w-full flex bg-gradient-subtle">
@@ -35,15 +31,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Heart className="h-5 w-5 text-destructive animate-pulse" />
-                  <span className="text-sm font-medium">2 Active Crisis Alerts</span>
-                </div>
-                <Button variant="ghost" size="sm" onClick={signOut}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
-                </Button>
+              <div className="flex items-center gap-2">
+                <Heart className="h-5 w-5 text-destructive animate-pulse" />
+                <span className="text-sm font-medium">2 Active Crisis Alerts</span>
               </div>
             </div>
           </header>
