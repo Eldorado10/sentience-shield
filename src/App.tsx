@@ -2,8 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
+import { useAuth } from "./hooks/useAuth";
 import Index from "./pages/Index";
 import MoodLogging from "./pages/MoodLogging";
 import AIAnalysis from "./pages/AIAnalysis";
@@ -11,9 +12,24 @@ import Recommendations from "./pages/Recommendations";
 import Counselors from "./pages/Counselors";
 import Sessions from "./pages/Sessions";
 import Crisis from "./pages/Crisis";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return <>{children}</>;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -22,13 +38,14 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<DashboardLayout><Index /></DashboardLayout>} />
-          <Route path="/mood-logging" element={<DashboardLayout><MoodLogging /></DashboardLayout>} />
-          <Route path="/ai-analysis" element={<DashboardLayout><AIAnalysis /></DashboardLayout>} />
-          <Route path="/recommendations" element={<DashboardLayout><Recommendations /></DashboardLayout>} />
-          <Route path="/counselors" element={<DashboardLayout><Counselors /></DashboardLayout>} />
-          <Route path="/sessions" element={<DashboardLayout><Sessions /></DashboardLayout>} />
-          <Route path="/crisis" element={<DashboardLayout><Crisis /></DashboardLayout>} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/" element={<ProtectedRoute><DashboardLayout><Index /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/mood-logging" element={<ProtectedRoute><DashboardLayout><MoodLogging /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/ai-analysis" element={<ProtectedRoute><DashboardLayout><AIAnalysis /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/recommendations" element={<ProtectedRoute><DashboardLayout><Recommendations /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/counselors" element={<ProtectedRoute><DashboardLayout><Counselors /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/sessions" element={<ProtectedRoute><DashboardLayout><Sessions /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/crisis" element={<ProtectedRoute><DashboardLayout><Crisis /></DashboardLayout></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
