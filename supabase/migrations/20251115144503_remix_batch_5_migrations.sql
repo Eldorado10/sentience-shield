@@ -1,3 +1,5 @@
+
+-- Migration: 20251103075040
 -- Create app_role enum for user roles
 CREATE TYPE public.app_role AS ENUM ('admin', 'counsellor', 'user');
 
@@ -331,3 +333,68 @@ $$;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Migration: 20251103075133
+-- Fix function search_path security issue
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$;
+
+-- Migration: 20251111160851
+-- Add data_scientist to existing app_role enum
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'data_scientist';
+
+-- Migration: 20251111161734
+-- Allow inserting roles for new users (needed during signup)
+CREATE POLICY "Allow role assignment during signup"
+ON public.user_roles
+FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = user_id);
+
+-- Update the handle_new_user trigger to assign data_scientist role for scientist email
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = 'public'
+AS $$
+BEGIN
+  INSERT INTO public.profiles (id, full_name, email)
+  VALUES (
+    NEW.id,
+    NEW.raw_user_meta_data->>'full_name',
+    NEW.email
+  );
+  
+  -- Assign role based on email domain for demo users
+  IF NEW.email = 'admin@mindcare.com' THEN
+    INSERT INTO public.user_roles (user_id, role)
+    VALUES (NEW.id, 'admin');
+  ELSIF NEW.email = 'scientist@mindcare.com' THEN
+    INSERT INTO public.user_roles (user_id, role)
+    VALUES (NEW.id, 'data_scientist');
+  ELSE
+    -- Assign default user role
+    INSERT INTO public.user_roles (user_id, role)
+    VALUES (NEW.id, 'user');
+  END IF;
+  
+  RETURN NEW;
+END;
+$$;
+
+-- Migration: 20251113082249
+-- Create demo users for testing
+-- Note: These will be created with the trigger handle_new_user which assigns roles
+
+-- This migration ensures the demo users exist
+-- Passwords: admin123 and scientist123;
