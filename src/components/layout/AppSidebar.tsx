@@ -23,7 +23,6 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { useAuth } from "@/hooks/useAuth";
 
 const adminMenuItems = [
   {
@@ -66,71 +65,7 @@ const dataScientistMenuItems = [
   },
 ];
 
-const patientMenuItems = [
-  {
-    title: "User Management",
-    url: "/",
-    icon: Users,
-  },
-];
-
-const itExpertMenuItems = [
-  {
-    title: "Session Tracking",
-    url: "/sessions",
-    icon: Calendar,
-  },
-];
-
-const mentalHealthResearcherMenuItems = [
-  {
-    title: "AI Mood Analysis",
-    url: "/ai-analysis",
-    icon: Brain,
-  },
-];
-
-const psychologistMenuItems = [
-  {
-    title: "Counselor Management",
-    url: "/counselors",
-    icon: UserCog,
-  },
-];
-
-const emergencyResponseMenuItems = [
-  {
-    title: "Crisis Detection",
-    url: "/crisis",
-    icon: AlertTriangle,
-  },
-];
-
 export function AppSidebar() {
-  const { userRole } = useAuth();
-
-  const getMenuItems = () => {
-    switch (userRole) {
-      case "admin":
-        return { label: "Admin Panel", items: adminMenuItems };
-      case "data_scientist":
-        return { label: "Data Scientist", items: dataScientistMenuItems };
-      case "patient":
-        return { label: "Patient Panel", items: patientMenuItems };
-      case "it_expert":
-        return { label: "IT Expert Panel", items: itExpertMenuItems };
-      case "mental_health_researcher":
-        return { label: "Researcher Panel", items: mentalHealthResearcherMenuItems };
-      case "psychologist":
-        return { label: "Psychologist Panel", items: psychologistMenuItems };
-      case "emergency_response_team":
-        return { label: "Emergency Response", items: emergencyResponseMenuItems };
-      default:
-        return { label: "Menu", items: [] };
-    }
-  };
-
-  const { label, items } = getMenuItems();
   return (
     <Sidebar className="border-r border-border">
       <SidebarHeader className="border-b border-border p-4">
@@ -147,10 +82,36 @@ export function AppSidebar() {
       
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>{label}</SidebarGroupLabel>
+          <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {adminMenuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      end
+                      className={({ isActive }) =>
+                        isActive
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                          : "hover:bg-sidebar-accent/50"
+                      }
+                    >
+                      <item.icon className="h-4 w-4 mr-3" />
+                      <span>{item.title}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Data Scientist</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {dataScientistMenuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink
